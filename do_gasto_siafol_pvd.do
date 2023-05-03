@@ -1,19 +1,31 @@
 /*
-Antes de correr este script, asegurarse que se han descargado todas las notas: APROBADO y VERIFICADO (PENDIENTE) del mes actual
-Meses cerrados:
-. 01. Enero
-. 02. Febrero
-. 03. Marzo
-. 
+---
+Descarga de SIAF OL:
+
+archivo de ejecución presupuestal:
+Reportes>Exportar Información Presupuestaria>UE
+
+archivo de certificacion:
+Reportes>Modificación Presupuestal>Ejecución Mensual Vs Marco Presupuestal>UE>Cadena Programática y Funcional>Clasificador de Gasto>Fase Certificado
+
+archivo de compromiso anual:
+Reportes>Modificación Presupuestal>Ejecución Mensual Vs Marco Presupuestal>UE>Cadena Programática y Funcional>Clasificador de Gasto>Fase Compromiso Anual
+
+archivo de metas físicas:
+Reportes>Avance Físico>Avance Físico de Metas Presupuestales>UE
+---
 */
 
 clear all
 set more off
 set rmsg on, permanently
 
-glo archivo_cert   "gasto_cert_siafol_26042023_0800.xls" // archivo de certificacion
-glo archivo_compa "gasto_compa_siafol_26042023_0800.xls" // archivo de compromiso anual
-glo archivo_ppto        "gasto_siafol_26042023_0800.xls" // archivo de ejecución presupuestal
+glo fecha "03052023"
+
+glo archivo_ppto        "gasto_siafol_${fecha}_0800.xls" // archivo de ejecución presupuestal
+glo archivo_cert   "gasto_cert_siafol_${fecha}_0800.xls" // archivo de certificacion
+glo archivo_compa "gasto_compa_siafol_${fecha}_0800.xls" // archivo de compromiso anual
+glo archivo_metas 		"metas_siafol_${fecha}_0800.xls" // archivo de metas físicas
 
 cd "C:\Users\a\Documents\aron\Data\"
 
@@ -75,6 +87,16 @@ recode mto_compa_* (.=0)
 
 save "tmp_compa.dta", replace
 
+// metas físicas
+
+import excel using "${archivo_metas}", clear
+keep B G H I K
+ren (B G H I K) (sec_func cant_meta_sem cant_meta_anual avan_fisico_sem avan_fisico_anual)
+keep if length(sec_func)==4
+destring *, replace
+
+save "tmp_metas.dta", replace
+
 // ppto
 
 import excel using "${archivo_ppto}", clear first
@@ -94,6 +116,7 @@ egen id_ppto=concat(_sec_func _fuente_financ _categoria_gasto tmp_1 tmp_2 tmp_3 
 drop _sec_func _fuente_financ _categoria_gasto tmp_1
 merge 1:1 id_ppto using "tmp_cert.dta", nogen
 merge 1:1 id_ppto using "tmp_compa.dta", nogen
+merge m:1 sec_func using "tmp_metas.dta", nogen update replace
 drop id_ppto
 drop mto_certificado mto_compro_anual
 egen double mto_certificado	=rowtotal(		mto_cert_01 -	mto_cert_12)
@@ -119,20 +142,4 @@ destring cui, replace
 export excel using "completo_${archivo_ppto}x", replace sheet(BD) first(var)
 cap erase "tmp_cert.dta"
 cap erase "tmp_compa.dta"
-
-// foreach x of varlist categoria_gasto-especifica_det {
-// 	replace `x'=subinstr(`x',".",". ",1)
-// }
-//
-// cap drop tmp_*
-// local i=2
-// foreach x of varlist generica subgenerica subgenerica_det especifica especifica_det {
-// 	gen tmp_`i' = substr(`x',1,(strpos(`x',".")-1))
-// 	local ++i
-// }
-//
-// gen tmp_1="2"
-// cap drop clasificador
-// egen clasificador=concat(tmp_1 tmp_2 tmp_3 tmp_4 tmp_5 tmp_6), p(".")
-//
-// export excel using "clasificadores.xlsx", replace first(var)
+cap erase "tmp_metas.dta"
