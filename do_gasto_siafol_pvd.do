@@ -116,7 +116,7 @@ egen id_ppto=concat(_sec_func _fuente_financ _categoria_gasto tmp_1 tmp_2 tmp_3 
 drop _sec_func _fuente_financ _categoria_gasto tmp_1
 merge 1:1 id_ppto using "tmp_cert.dta", nogen
 merge 1:1 id_ppto using "tmp_compa.dta", nogen
-merge m:1 sec_func using "tmp_metas.dta", nogen update replace keep(1 3)
+merge m:1 sec_func using "tmp_metas.dta", nogen update replace
 drop id_ppto
 drop mto_certificado mto_compro_anual
 egen double mto_certificado	=rowtotal(		mto_cert_01 -	mto_cert_12)
