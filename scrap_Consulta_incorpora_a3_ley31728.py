@@ -1,9 +1,6 @@
 import time
 import pandas as pd
-import numpy as np
 from selenium import webdriver
-from bs4 import BeautifulSoup
-from selenium.webdriver.common.keys import Keys
 from datetime import date
 
 # para contabilizar tiempo de demora
@@ -19,7 +16,7 @@ PATH_INPUT = 'C:/Users/a/Documents/aron/Data/'
 # ruta de salida
 PATH_OUTPUT = 'C:/Users/a/Documents/aron/Reportes/'
 # archivo input (proyectos incorporados)
-FILE_INPUT = 'id_cui_v0.xlsx'
+FILE_INPUT = 'id_cui.xlsx'
 # nombre del archivo output
 FILE_OUTPUT = 'amigable_incorpora_RO_a3_ley31728_{}.xlsx'.format(d1)
 # tiempo que deja cargar cada página
@@ -155,19 +152,43 @@ for depto in departamentos:
                     # boton grupo funcional
                     time.sleep(timesleep)
                     driver.find_element("id", "ctl00_CPH1_BtnGrupoFuncional").click()
-                    gfc = driver.find_element("name", "grp1").get_attribute("value").split('/', 1)[0]
                     
-                    # boton pp
-                    time.sleep(timesleep)
-                    driver.find_element("id", "ctl00_CPH1_BtnProgramaPpto").click()
+                    # contamos cuantas aao hay
+                    tmp=1
+                    boton = 'ctl00_CPH1_RptData_ctl{:02}_TD0'.format(tmp)
+                    driver.find_element("id", boton).click()
+                    while True:
+                        tmp += 1
+                        boton = 'ctl00_CPH1_RptData_ctl{:02}_TD0'.format(tmp)
+                        try:
+                            time.sleep(timesleep)
+                            driver.find_element("id", boton).click()
+                        except:
+                            total_gfcs = tmp-1 # < -------------------------------------------------------------  cambia total_*
+                            # del tmp
+                            break
                     
-                    ppto = driver.find_element("name", "grp1").get_attribute("value")
-                    
-                    ppto = '{}/{}/{}/{}/{}/'.format(row['cui'],aao,fc,dfc,gfc)+ppto
-                    lista_proyectos.append(ppto)
-                    
-                    driver.find_element("id", "ctl00_CPH1_RptHistory_ctl10_TD0").click()
+                    # seleccionamos gfc i
+                    count_gfc=1
+                    while (count_gfc<=total_gfcs):
+                        boton = 'ctl00_CPH1_RptData_ctl{:02}_TD0'.format(count_gfc)
+                        time.sleep(timesleep)
+                        driver.find_element("id", boton).click()
+                        gfc = driver.find_element("id",boton).find_element("name", "grp1").get_attribute("value").split('/', 1)[0]
+                        
+                        # boton pp
+                        time.sleep(timesleep)
+                        driver.find_element("id", "ctl00_CPH1_BtnProgramaPpto").click()
+                        
+                        ppto = driver.find_element("name", "grp1").get_attribute("value")
+                        
+                        ppto = '{}/{}/{}/{}/{}/'.format(row['cui'],aao,fc,dfc,gfc)+ppto
+                        lista_proyectos.append(ppto)
+                        
+                        count_gfc+=1
+                        driver.find_element("id", "ctl00_CPH1_RptHistory_ctl13_TD0").click()
                     count_aao+=1
+                    driver.find_element("id", "ctl00_CPH1_RptHistory_ctl10_TD0").click()
                 driver.find_element("id", "ctl00_CPH1_RptHistory_ctl09_TD0").click()
             driver.find_element("id", "ctl00_CPH1_RptHistory_ctl08_TD0").click()
         driver.find_element("id", "ctl00_CPH1_RptHistory_ctl07_TD0").click()
