@@ -180,10 +180,16 @@ for depto in departamentos:
                         time.sleep(timesleep)
                         driver.find_element("id", "ctl00_CPH1_BtnProgramaPpto").click()
                         
-                        ppto = driver.find_element("name", "grp1").get_attribute("value")
-                        
-                        ppto = '{}/{}/{}/{}/{}/'.format(row['cui'],aao,fc,dfc,gfc)+ppto
-                        lista_proyectos.append(ppto)
+                        e=0
+                        while True:
+                            e += 1
+                            try:
+                                los_grp1 = driver.find_element("id", 'ctl00_CPH1_RptData_ctl{:02}_TD0'.format(e))  # cada fila
+                                ppto = los_grp1.find_element("name", "grp1").get_attribute("value")
+                                ppto = '{}/{}/{}/{}/{}/'.format(row['cui'],aao,fc,dfc,gfc)+ppto
+                                lista_proyectos.append(ppto)
+                            except:
+                                break
                         
                         count_gfc+=1
                         driver.find_element("id", "ctl00_CPH1_RptHistory_ctl13_TD0").click()
