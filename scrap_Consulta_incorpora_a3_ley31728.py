@@ -109,6 +109,7 @@ for depto in departamentos:
             for index, row in muni_rows.iterrows():
             
                 # seleccionamos proyecto
+                print(row['cui'])
                 cui_s = "//*[contains(text(),'{}:')]".format(row['cui'])
                 driver.find_element("xpath",cui_s).click()
                 
