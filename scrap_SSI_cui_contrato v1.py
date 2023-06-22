@@ -36,7 +36,7 @@ options.add_argument("--start-maximized")
 driver = webdriver.Chrome(chrome_options=options)
 BBDD = pd.DataFrame()
 
-Ncui = "2001621"
+#Ncui = "2001621"
 
 ## INICIA BUCLE
 
