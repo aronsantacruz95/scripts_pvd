@@ -11,7 +11,7 @@ today = date.today()
 d1 = today.strftime("%d%m%Y")
 
 # si es prueba colocar "_prueba", de lo contrario dejar en blanco
-sufijo = '_prueba'
+sufijo = '_PL2024'
 # sufijo = ''
 
 # ----------------- MODIFICABLE
@@ -24,7 +24,7 @@ PATH_OUTPUT = 'C:/Users/servpres_16/Documents/aron/Data/'
 FILE_OUTPUT1 = 'info_f8_{}{}.xlsx'.format(d1,sufijo)
 # FILE_OUTPUT2 = 'infoF12BSSIPMICAT_{}{}.xlsx'.format(d1,sufijo)
 # nombre del archivo con CUIs
-FILE_CUI = 'cuis_f8{}.xlsx'.format(sufijo)
+FILE_CUI = 'cuis_2023{}.xlsx'.format(sufijo)
 # tiempo que deja cargar cada página
 timesleep=1.5
 #
@@ -52,7 +52,7 @@ for Ncui in cuis:
     print(Ncui)
     
     driver.get(web)
-    time.sleep(timesleep)
+    # time.sleep(timesleep)
     pageHTML = driver.page_source
     soup = BeautifulSoup(pageHTML, 'lxml')
     
