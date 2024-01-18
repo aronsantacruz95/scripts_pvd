@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Mar 21 12:35:24 2023
-
-@author: ARON SANTA CRUZ
-"""
-
 import time
 import pandas as pd
 import numpy as np
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -20,7 +14,7 @@ current_datetime = datetime.now().strftime("%d%m%Y_%H%M")
 # ----------------- MODIFICABLE
 #
 # PARTES
-parte = '_ejemplo'
+parte = '_validadorArt11'
 # ruta de entrada
 PATH_INPUT = 'C:/Users/servpres_16/Documents/aron/Data/'
 # ruta de salida
@@ -28,15 +22,17 @@ PATH_OUTPUT = 'C:/Users/servpres_16/Documents/aron/Data/'
 # nombre del archivo output
 FILE_OUTPUT = 'infoSSI_{}{}.xlsx'.format(current_datetime,parte)
 # nombre del archivo con CUIs
-FILE_CUI = 'cuis_2023{}.xlsx'.format(parte)
+FILE_CUI = 'cuis{}.xlsx'.format(parte)
 # tiempo que deja cargar cada página
 timesleep=2
 #
 # ----------------- MODIFICABLE
 
+service = Service(executable_path="C:/Users/servpres_16/.cache/selenium/chromedriver/win32/119.0.6045.105/chromedriver.exe")
 options = webdriver.ChromeOptions()
 options.add_argument("--start-maximized")
-driver = webdriver.Chrome(chrome_options=options)
+driver = webdriver.Chrome(service=service, options=options)
+#driver = webdriver.Chrome(chrome_options=options)
 BBDD = pd.DataFrame()
 BBDDca = pd.DataFrame()
 
@@ -68,26 +64,31 @@ for Ncui in cuis:
     pageHTML = driver.page_source
     soup = BeautifulSoup(pageHTML, 'lxml')
     
-    codsnip = ''
-    codsnip = soup.find(id="td_snip").get_text()
+    nominv = ''
+    nominv = soup.find(id="td_nominv").get_text()
     i = 0
-    if (codsnip==''):
-        while (codsnip=='') and (i < 3):
-            time.sleep(timesleep)
+    if (nominv==''):
+        while (nominv=='') and (i < 20):
             driver.get(web)
+            time.sleep(i)
             pageHTML = driver.page_source
             soup = BeautifulSoup(pageHTML, 'lxml')
-            codsnip = ''
-            codsnip = soup.find(id="td_snip").get_text()
+            nominv = ''
+            nominv = soup.find(id="td_nominv").get_text()
             i += 1
+    infoSSI['nominv'] = nominv
     
-    # codsnip = ''
-    # codsnip = soup.find(id="td_snip").get_text()
+    codsnip = ''
+    codsnip = soup.find(id="td_snip").get_text()
     infoSSI['codsnip'] = codsnip
     
     # nominv = ''
     # nominv = soup.find(id="td_nominv").get_text()
     # infoSSI['nominv'] = nominv
+    
+    opmi = ''
+    opmi = soup.find(id="td_opmi").get_text()
+    infoSSI['opmi'] = opmi
     
     fecharegistro = ''
     fecharegistro = soup.find(id="td_fecreg").get_text()
@@ -133,10 +134,12 @@ for Ncui in cuis:
     
     et = ''
     et = soup.find(id="td_indet").get_text()
+    et = et.strip()
     infoSSI['et'] = et
     
     registroseg = ''
     registroseg = soup.find(id="td_indseg").get_text()
+    registroseg = registroseg.strip()
     infoSSI['registroseg'] = registroseg
     
     feciniejec = ''
@@ -182,14 +185,43 @@ for Ncui in cuis:
     nominv = soup.find(id="td_nominv").get_text()
     infoSSI['nominv'] = nominv
     
+    registrocierre = ''
+    registrocierre = soup.find(id="td_f9").get_text()
+    registrocierre = registrocierre.strip()
+    infoSSI['registrocierre'] = registrocierre
+    
+    devacum24 = ''
+    devacum24 = soup.find(id="val_efin").get_text()
+    devacum24 = devacum24.replace(',','')
+    infoSSI['devacum24'] = devacum24
+    
+    dev24 = ''
+    dev24 = soup.find(id="val_avan").get_text()
+    dev24 = dev24.replace(',','')
+    infoSSI['dev24'] = dev24
+    
+    pim24 = ''
+    pim24 = soup.find(id="val_pim").get_text()
+    pim24 = pim24.replace(',','')
+    infoSSI['pim24'] = pim24
+    
+    situ = ''
+    situ = soup.find(id="td_situinv").get_text()
+    situ = situ.replace(',','')
+    infoSSI['situ'] = situ
+    
+    tipoinv = ''
+    tipoinv = soup.find(id="td_tipinv").get_text()
+    infoSSI['tipoinv'] = tipoinv
+    
     infoSSI.index = [Ncui]
     
     BBDD = pd.concat([BBDD, infoSSI], axis=0, sort=False)
     #BBDD = BBDD.append(infoF12BSSI)
     del infoSSI
     
-BBDD = BBDD[['cui','nominv','uf','uei','feciniejec','fecfinejec','et','cia','concurr','laudo','cfianza','montototal','beneficiarios']]
-
+BBDD = BBDD[['cui','nominv','opmi','uf','uei','cadfun','tipoinv','feciniejec','fecfinejec','situ','beneficiarios','et','registrocierre','montototal','devacum24','dev24','pim24']]
+BBDD[['montototal','devacum24','dev24','pim24']] = BBDD[['montototal','devacum24','dev24','pim24']].apply(pd.to_numeric)
 BBDD.to_excel('{}{}'.format(PATH_OUTPUT,FILE_OUTPUT),sheet_name='BD',index=False)
 
 driver.close()
